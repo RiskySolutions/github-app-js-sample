@@ -13,7 +13,15 @@ const privateKeyPath = process.env.PRIVATE_KEY_PATH
 const privateKey = fs.readFileSync(privateKeyPath, 'utf8')
 const secret = process.env.WEBHOOK_SECRET
 const enterpriseHostname = process.env.ENTERPRISE_HOSTNAME
-const messageForNewPRs = fs.readFileSync('./message.md', 'utf8')
+const messageTemplate = fs.readFileSync('./message.md', 'utf8')
+const { name, version } = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
+
+const GREETING_MESSAGE = `\`\`\`
+Package: ${name}
+Version: ${version}
+\`\`\`
+
+${messageTemplate}`
 
 // Create an authenticated Octokit client authenticated as a GitHub App
 const app = new App({
@@ -43,7 +51,7 @@ app.webhooks.on('pull_request.opened', async ({ octokit, payload }) => {
       owner: payload.repository.owner.login,
       repo: payload.repository.name,
       issue_number: payload.pull_request.number,
-      body: messageForNewPRs
+      body: GREETING_MESSAGE
     })
   } catch (error) {
     if (error.response) {
